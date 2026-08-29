@@ -6,15 +6,14 @@ const TABLE_NAME = process.env.TABLE_NAME;
 exports.handler = async (event) => {
   try {
     const taskId = event.pathParameters && event.pathParameters.taskId;
+
     if (!taskId) {
       return response(400, { error: "taskId is required in the path" });
     }
 
     const body = JSON.parse(event.body || "{}");
-    const { title, description, priority, done } = body;
+    const { title, description, priority, assignedTo, done } = body;
 
-    // Build the update expression dynamically so a request can update
-    // just one field (e.g. only "done") without clobbering the rest.
     const updates = [];
     const names = {};
     const values = {};
@@ -24,14 +23,22 @@ exports.handler = async (event) => {
       names["#title"] = "title";
       values[":title"] = title;
     }
+
     if (description !== undefined) {
       updates.push("description = :description");
       values[":description"] = description;
     }
+
     if (priority !== undefined) {
       updates.push("priority = :priority");
       values[":priority"] = priority;
     }
+
+    if (assignedTo !== undefined) {
+      updates.push("assignedTo = :assignedTo");
+      values[":assignedTo"] = assignedTo;
+    }
+
     if (done !== undefined) {
       updates.push("done = :done");
       values[":done"] = Boolean(done);
