@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Tasks - Task Manager</title>
+
+  <link rel="stylesheet" href="/employee.css">
+</head>
+
+<body>
+
+  <main class="employee-container">
+
+    <header class="employee-header">
+
+      <div>
+        <p class="welcome-text">Welcome</p>
+        <h1 id="employee-name">Employee</h1>
+        <p class="username" id="employee-username"></p>
+      </div>
+
+      <button
+        type="button"
+        id="logout-button"
+        class="logout-button">
+        Logout
+      </button>
+
+    </header>
+
+    <section class="dashboard-title">
+
+      <div>
+        <h2>My Tasks</h2>
+        <p>View your assigned tasks and update their status.</p>
+      </div>
+
+    </section>
+
+    <section class="summary">
+
+      <div class="summary-item">
+        <span
+          class="summary-count"
+          id="total-count">
+          0
+        </span>
+
+        <span class="summary-label">
+          Total
+        </span>
+      </div>
+
+      <div class="summary-item todo">
+
+        <span
+          class="summary-count"
+          id="todo-count">
+          0
+        </span>
+
+        <span class="summary-label">
+          To Do
+        </span>
+
+      </div>
+
+      <div class="summary-item progress">
+
+        <span
+          class="summary-count"
+          id="progress-count">
+          0
+        </span>
+
+        <span class="summary-label">
+          In Progress
+        </span>
+
+      </div>
+
+      <div class="summary-item completed">
+
+        <span
+          class="summary-count"
+          id="completed-count">
+          0
+        </span>
+
+        <span class="summary-label">
+          Completed
+        </span>
+
+      </div>
+
+    </section>
+
+    <p
+      id="employee-message"
+      class="employee-message">
+    </p>
+
+    <section
+      id="employee-task-list"
+      class="employee-task-list">
+
+      <div class="empty-state">
+        Loading your tasks...
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="/config.js"></script>
+  <script src="/employee.js"></script>
+
+</body>
+</html>
