@@ -1,0 +1,341 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 40px 16px;
+  background: #f4f5f7;
+  color: #1c1e21;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.employee-container {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* Header */
+
+.employee-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.welcome-text {
+  margin: 0 0 3px;
+  color: #777;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.employee-header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.username {
+  margin: 4px 0 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Logout */
+
+.logout-button {
+  border: none;
+  border-radius: 7px;
+  padding: 9px 15px;
+  background: #ffebee;
+  color: #c62828;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.logout-button:hover {
+  background: #ffcdd2;
+}
+
+.logout-button:active {
+  transform: scale(0.96);
+}
+
+.logout-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Dashboard Heading */
+
+.dashboard-title {
+  margin-bottom: 16px;
+}
+
+.dashboard-title h2 {
+  margin: 0 0 5px;
+  font-size: 20px;
+}
+
+.dashboard-title p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Summary */
+
+.summary {
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+  background: white;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 22px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.summary-item {
+  flex: 1;
+  text-align: center;
+}
+
+.summary-count {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.summary-label {
+  display: block;
+  margin-top: 3px;
+  color: #666;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-item.todo .summary-count {
+  color: #1565c0;
+}
+
+.summary-item.progress .summary-count {
+  color: #f57f17;
+}
+
+.summary-item.completed .summary-count {
+  color: #2e7d32;
+}
+
+/* Messages */
+
+.employee-message {
+  min-height: 20px;
+  margin: 0 0 10px;
+  color: #c62828;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Task List */
+
+.employee-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Task Card */
+
+.employee-task {
+  background: white;
+  border-radius: 10px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.employee-task.status-todo {
+  border-left: 4px solid #1565c0;
+}
+
+.employee-task.status-in-progress {
+  border-left: 4px solid #f57f17;
+}
+
+.employee-task.status-completed {
+  border-left: 4px solid #2e7d32;
+}
+
+.employee-task.status-completed .employee-task-title {
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
+/* Task Top */
+
+.employee-task-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.employee-task-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.employee-task-title {
+  margin: 0 0 5px;
+  font-size: 16px;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.employee-task-description {
+  margin: 0 0 10px;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* Badges */
+
+.employee-task-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.priority-badge,
+.status-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.priority-low {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.priority-medium {
+  background: #fff8e1;
+  color: #f57f17;
+}
+
+.priority-high {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.status-badge-todo {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-badge-in-progress {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-badge-completed {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* Status Control */
+
+.employee-task-actions {
+  flex-shrink: 0;
+}
+
+.employee-status-select {
+  min-width: 125px;
+  padding: 8px 10px;
+  border: 1px solid #dcdfe3;
+  border-radius: 6px;
+  background: white;
+  color: #1c1e21;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.employee-status-select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.employee-status-select:disabled {
+  background: #f3f4f6;
+  cursor: not-allowed;
+}
+
+/* Empty State */
+
+.empty-state {
+  background: white;
+  border-radius: 10px;
+  padding: 36px 20px;
+  color: #888;
+  font-size: 14px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  body {
+    padding: 24px 12px;
+  }
+
+  .employee-header {
+    align-items: flex-start;
+  }
+
+  .employee-header h1 {
+    font-size: 24px;
+  }
+
+  .summary {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+
+  .summary-item {
+    flex: 1 1 40%;
+    min-width: 100px;
+    padding: 6px;
+  }
+
+  .summary-count {
+    font-size: 24px;
+  }
+
+  .employee-task-top {
+    flex-direction: column;
+  }
+
+  .employee-task-actions {
+    width: 100%;
+  }
+
+  .employee-status-select {
+    width: 100%;
+    min-height: 42px;
+  }
+}
