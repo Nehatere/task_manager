@@ -162,4 +162,29 @@
 .member-delete:hover {
   background: #ffcdd2;
 }
+  .member-delete {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  background: #ffebee;
+  color: #c62828;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.member-delete:hover {
+  background: #ffcdd2;
+}
+
+.member-delete:active {
+  transform: scale(0.96);
+}
+
+.member-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 }
