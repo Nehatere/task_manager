@@ -121,4 +121,45 @@
   .team-section-header {
     align-items: flex-start;
   }
+  .member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.member-info strong {
+  font-size: 14px;
+  color: #1c1e21;
+}
+
+.member-info span {
+  font-size: 13px;
+  color: #666;
+}
+
+.member-delete {
+  border: none;
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: #ffebee;
+  color: #c62828;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.member-delete:hover {
+  background: #ffcdd2;
+}
 }
