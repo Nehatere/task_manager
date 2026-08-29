@@ -7,7 +7,7 @@ const TABLE_NAME = process.env.TABLE_NAME;
 exports.handler = async (event) => {
   try {
     const body = JSON.parse(event.body || "{}");
-    const { title, description, priority } = body;
+    const { title, description, priority, assignedTo } = body;
 
     if (!title || !title.trim()) {
       return response(400, { error: "Title is required" });
@@ -18,6 +18,7 @@ exports.handler = async (event) => {
       title: title.trim(),
       description: description ? description.trim() : "",
       priority: ["low", "medium", "high"].includes(priority) ? priority : "medium",
+      assignedTo: assignedTo ? assignedTo.trim() : "",
       done: false,
       createdAt: new Date().toISOString(),
     };
