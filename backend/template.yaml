@@ -2,8 +2,8 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
 Description: >
-  Task Manager 3-tier app - backend
-  Lambda + API Gateway + DynamoDB + Cognito
+  Task Manager 3-tier app
+  Lambda + API Gateway + DynamoDB
 
 Globals:
   Function:
@@ -13,6 +13,8 @@ Globals:
     Environment:
       Variables:
         TABLE_NAME: !Ref TasksTable
+        USERS_TABLE_NAME: !Ref UsersTable
+        SESSIONS_TABLE_NAME: !Ref SessionsTable
 
 Resources:
 
@@ -25,6 +27,22 @@ Resources:
         Name: taskId
         Type: String
 
+  UsersTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: users-table
+      PrimaryKey:
+        Name: username
+        Type: String
+
+  SessionsTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: sessions-table
+      PrimaryKey:
+        Name: tokenHash
+        Type: String
+
   # ---------- API Gateway ----------
   TasksApi:
     Type: AWS::Serverless::Api
@@ -34,12 +52,8 @@ Resources:
         AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
         AllowHeaders: "'Content-Type,Authorization'"
         AllowOrigin: "'*'"
-      Auth:
-        Authorizers:
-          CognitoAuthorizer:
-            UserPoolArn: arn:aws:cognito-idp:ap-south-1:637423614462:userpool/ap-south-1_o9MAKdRsu
 
-  # ---------- Task Lambdas ----------
+  # ---------- Existing task functions ----------
   CreateTaskFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -104,22 +118,68 @@ Resources:
             Path: /tasks/{taskId}
             Method: DELETE
 
-  # ---------- Team Management ----------
+  # ---------- Authentication ----------
+  BootstrapAdminFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: bootstrapAdmin.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TasksApi
+            Path: /auth/bootstrap-admin
+            Method: POST
+
+  LoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: login.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TasksApi
+            Path: /auth/login
+            Method: POST
+
+  LogoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: logout.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TasksApi
+            Path: /auth/logout
+            Method: POST
+
+  # ---------- Team management ----------
   CreateTeamMemberFunction:
     Type: AWS::Serverless::Function
     Properties:
       Handler: createTeamMember.handler
       CodeUri: src/
-      Environment:
-        Variables:
-          USER_POOL_ID: ap-south-1_o9MAKdRsu
       Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - cognito-idp:AdminCreateUser
-                - cognito-idp:AdminSetUserPassword
-              Resource: arn:aws:cognito-idp:ap-south-1:637423614462:userpool/ap-south-1_o9MAKdRsu
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
       Events:
         Api:
           Type: Api
@@ -127,17 +187,97 @@ Resources:
             RestApiId: !Ref TasksApi
             Path: /team-members
             Method: POST
-            Auth:
-              Authorizer: CognitoAuthorizer
+
+  GetTeamMembersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: getTeamMembers.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TasksApi
+            Path: /team-members
+            Method: GET
+
+  DeleteTeamMemberFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: deleteTeamMember.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TasksApi
+            Path: /team-members/{username}
+            Method: DELETE
+
+  # ---------- Employee tasks ----------
+  GetMyTasksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: getMyTasks.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref TasksTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TasksApi
+            Path: /employee/tasks
+            Method: GET
+
+  UpdateMyTaskStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: updateMyTaskStatus.handler
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TasksTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UsersTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TasksApi
+            Path: /employee/tasks/{taskId}/status
+            Method: PUT
 
 Outputs:
   ApiUrl:
-    Description: "Base URL for the Task Manager API"
+    Description: "Base URL for Task Manager API"
+    Value: !Sub "https://${TasksApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+
+  TasksApiUrl:
     Value: !Sub "https://${TasksApi}.execute-api.${AWS::Region}.amazonaws.com/prod/tasks"
 
-  TeamMembersApiUrl:
-    Description: "Team management endpoint"
-    Value: !Sub "https://${TasksApi}.execute-api.${AWS::Region}.amazonaws.com/prod/team-members"
+  UsersTableName:
+    Value: !Ref UsersTable
 
-  TableName:
+  SessionsTableName:
+    Value: !Ref SessionsTable
+
+  TasksTableName:
     Value: !Ref TasksTable
