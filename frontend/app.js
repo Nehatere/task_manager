@@ -12,21 +12,11 @@ function showError(msg) {
 async function fetchTasks() {
   try {
     const res = await fetch(API_URL);
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch tasks");
-    }
+    if (!res.ok) throw new Error("Failed to fetch tasks");
 
     const data = await res.json();
-
     renderTasks(data.tasks || []);
-    renderSummary(
-      data.summary || {
-        total: 0,
-        done: 0,
-        pending: 0,
-      }
-    );
+    renderSummary(data.summary || { total: 0, done: 0, pending: 0 });
   } catch (err) {
     console.error(err);
     showError("Could not load tasks.");
@@ -53,36 +43,32 @@ function renderTasks(tasks) {
 
   for (const task of tasks) {
     const li = document.createElement("li");
-
     li.className = "task-item" + (task.done ? " done" : "");
     li.dataset.id = task.taskId;
 
     li.innerHTML = `
       <div class="task-main">
         <div class="task-display">
-
-          <div class="task-title">
-            ${escapeHtml(task.title)}
-          </div>
+          <div class="task-title">${escapeHtml(task.title)}</div>
 
           ${
             task.description
-              ? `
-                <div class="task-description">
-                  ${escapeHtml(task.description)}
-                </div>
-              `
+              ? `<div class="task-description">${escapeHtml(task.description)}</div>`
+              : ""
+          }
+
+          ${
+            task.assignedTo
+              ? `<div class="task-assigned"><strong>Assigned to:</strong> ${escapeHtml(task.assignedTo)}</div>`
               : ""
           }
 
           <span class="priority-badge priority-${task.priority}">
             ${escapeHtml(task.priority)}
           </span>
-
         </div>
 
         <div class="task-edit-form" style="display:none;">
-
           <input
             type="text"
             class="edit-title"
@@ -95,25 +81,22 @@ function renderTasks(tasks) {
             placeholder="Description"
           >${escapeHtml(task.description || "")}</textarea>
 
+          <input
+            type="text"
+            class="edit-assigned"
+            value="${escapeAttribute(task.assignedTo || "")}"
+            placeholder="Assigned to"
+          >
+
           <select class="edit-priority">
-            <option value="low" ${
-              task.priority === "low" ? "selected" : ""
-            }>Low</option>
-
-            <option value="medium" ${
-              task.priority === "medium" ? "selected" : ""
-            }>Medium</option>
-
-            <option value="high" ${
-              task.priority === "high" ? "selected" : ""
-            }>High</option>
+            <option value="low" ${task.priority === "low" ? "selected" : ""}>Low</option>
+            <option value="medium" ${task.priority === "medium" ? "selected" : ""}>Medium</option>
+            <option value="high" ${task.priority === "high" ? "selected" : ""}>High</option>
           </select>
-
         </div>
       </div>
 
       <div class="task-actions">
-
         <button
           class="btn-done"
           data-action="toggle"
@@ -151,7 +134,6 @@ function renderTasks(tasks) {
           data-id="${task.taskId}">
           Delete
         </button>
-
       </div>
     `;
 
@@ -173,17 +155,15 @@ function escapeAttribute(str) {
     .replace(/>/g, "&gt;");
 }
 
-/* ADD TASK */
+/* add a task function */
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const title = document.getElementById("title").value.trim();
-  const description = document
-    .getElementById("description")
-    .value.trim();
-
+  const description = document.getElementById("description").value.trim();
   const priority = document.getElementById("priority").value;
+  const assignedTo = document.getElementById("assignedTo").value.trim();
 
   if (!title) {
     showError("Please enter a task title.");
@@ -193,25 +173,21 @@ form.addEventListener("submit", async (e) => {
   try {
     const res = await fetch(API_URL, {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json",
       },
-
       body: JSON.stringify({
         title,
         description,
         priority,
+        assignedTo,
       }),
     });
 
-    if (!res.ok) {
-      throw new Error("Failed to create task");
-    }
+    if (!res.ok) throw new Error("Failed to create task");
 
     form.reset();
     document.getElementById("priority").value = "medium";
-
     await fetchTasks();
   } catch (err) {
     console.error(err);
@@ -219,96 +195,69 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-/* TASK ACTIONS */
+/* task action  */
 
 taskList.addEventListener("click", async (e) => {
   const btn = e.target.closest("button");
-
   if (!btn) return;
 
   const { action, id } = btn.dataset;
-
   const taskItem = btn.closest(".task-item");
-
   if (!taskItem) return;
 
-  const displaySection =
-    taskItem.querySelector(".task-display");
-
-  const editForm =
-    taskItem.querySelector(".task-edit-form");
-
-  const editButton =
-    taskItem.querySelector(".btn-edit");
-
-  const saveButton =
-    taskItem.querySelector(".btn-save");
-
-  const cancelButton =
-    taskItem.querySelector(".btn-cancel");
+  const displaySection = taskItem.querySelector(".task-display");
+  const editForm = taskItem.querySelector(".task-edit-form");
+  const editButton = taskItem.querySelector(".btn-edit");
+  const saveButton = taskItem.querySelector(".btn-save");
+  const cancelButton = taskItem.querySelector(".btn-cancel");
 
   try {
-
-    /* DONE / UNDO */
+    /*done and undo function */
 
     if (action === "toggle") {
-      const currentlyDone =
-        btn.dataset.done === "true";
+      const currentlyDone = btn.dataset.done === "true";
 
       const res = await fetch(`${API_URL}/${id}`, {
         method: "PUT",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           done: !currentlyDone,
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to update task");
-      }
-
+      if (!res.ok) throw new Error("Failed to update task");
       await fetchTasks();
     }
 
-    /* ENTER EDIT MODE */
+    /*edit function */
 
     else if (action === "edit") {
       displaySection.style.display = "none";
       editForm.style.display = "flex";
-
       editButton.style.display = "none";
       saveButton.style.display = "inline-block";
       cancelButton.style.display = "inline-block";
     }
 
-    /* CANCEL EDIT */
+    /*cancel section */
 
     else if (action === "cancel") {
       displaySection.style.display = "";
       editForm.style.display = "none";
-
       editButton.style.display = "inline-block";
       saveButton.style.display = "none";
       cancelButton.style.display = "none";
     }
 
-    /* SAVE EDIT */
+    /* save section */
 
     else if (action === "save") {
-      const newTitle =
-        taskItem.querySelector(".edit-title").value.trim();
-
-      const newDescription =
-        taskItem
-          .querySelector(".edit-description")
-          .value.trim();
-
-      const newPriority =
-        taskItem.querySelector(".edit-priority").value;
+      const newTitle = taskItem.querySelector(".edit-title").value.trim();
+      const newDescription = taskItem.querySelector(".edit-description").value.trim();
+      const newAssignedTo = taskItem.querySelector(".edit-assigned").value.trim();
+      const newPriority = taskItem.querySelector(".edit-priority").value;
 
       if (!newTitle) {
         showError("Task title cannot be empty.");
@@ -317,50 +266,37 @@ taskList.addEventListener("click", async (e) => {
 
       const res = await fetch(`${API_URL}/${id}`, {
         method: "PUT",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
           title: newTitle,
           description: newDescription,
           priority: newPriority,
+          assignedTo: newAssignedTo,
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to edit task");
-      }
-
+      if (!res.ok) throw new Error("Failed to edit task");
       await fetchTasks();
     }
 
-    /* DELETE */
-
+    /*delete section */
     else if (action === "delete") {
-      const confirmed =
-        confirm("Are you sure you want to delete this task?");
-
+      const confirmed = confirm("Are you sure you want to delete this task?");
       if (!confirmed) return;
 
       const res = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to delete task");
-      }
-
+      if (!res.ok) throw new Error("Failed to delete task");
       await fetchTasks();
     }
-
   } catch (err) {
     console.error(err);
     showError("Action failed. Please try again.");
   }
 });
-
-/* INITIAL LOAD */
 
 fetchTasks();
