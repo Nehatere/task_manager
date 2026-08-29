@@ -8,9 +8,17 @@
 </head>
 <body>
   <main class="container">
+
     <h1>Task Manager</h1>
 
+    <div class="admin-actions">
+      <a href="team-management.html" class="manage-team-btn">
+        Manage Team
+      </a>
+    </div>
+
     <section class="summary" id="summary">
+
       <div class="summary-item">
         <span class="summary-count" id="total-count">0</span>
         <span class="summary-label">Total</span>
@@ -30,9 +38,11 @@
         <span class="summary-count" id="completed-count">0</span>
         <span class="summary-label">Completed</span>
       </div>
+
     </section>
 
     <form id="task-form" class="task-form">
+
       <input
         type="text"
         id="title"
@@ -58,11 +68,13 @@
       />
 
       <button type="submit">Add Task</button>
+
     </form>
 
     <p id="error-message" class="error-message"></p>
 
     <ul id="task-list" class="task-list"></ul>
+
   </main>
 
   <script src="config.js"></script>
