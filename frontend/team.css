@@ -187,4 +187,30 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+  .member-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.member-info strong {
+  font-size: 14px;
+  color: #1c1e21;
+}
+
+.member-info span {
+  font-size: 13px;
+  color: #666;
+}
 }
