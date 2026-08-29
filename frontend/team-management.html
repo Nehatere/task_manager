@@ -4,14 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manage Team - Task Manager</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="team-management.css" />
+
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./team-management.css" />
 </head>
+
 <body>
   <main class="container">
 
     <div class="page-header">
-      <a href="index.html" class="back-btn">← Back to Tasks</a>
+      <a href="./index.html" class="back-btn">← Back to Tasks</a>
       <h1>Manage Team</h1>
     </div>
 
@@ -19,7 +21,7 @@
       <h2>Add Team Member</h2>
 
       <p class="team-help">
-        Create an account for a team member who can later log in and view assigned tasks.
+        Create an account for a team member who can log in and view assigned tasks.
       </p>
 
       <form id="member-form" class="member-form">
@@ -48,21 +50,25 @@
     </section>
 
     <section class="team-card">
+
       <div class="team-section-header">
         <h2>Team Members</h2>
-        <span id="member-count" class="member-count">0 Members</span>
+
+        <span id="member-count" class="member-count">
+          0 Members
+        </span>
       </div>
 
       <div id="member-list" class="member-list">
+
         <p class="empty-members">
           No team members yet.
         </p>
+
       </div>
+
     </section>
 
   </main>
-
-  <script src="config.js"></script>
-  <script src="team-management.js"></script>
 </body>
 </html>
