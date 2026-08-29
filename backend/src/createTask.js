@@ -17,9 +17,11 @@ exports.handler = async (event) => {
       taskId: randomUUID(),
       title: title.trim(),
       description: description ? description.trim() : "",
-      priority: ["low", "medium", "high"].includes(priority) ? priority : "medium",
+      priority: ["low", "medium", "high"].includes(priority)
+        ? priority
+        : "medium",
       assignedTo: assignedTo ? assignedTo.trim() : "",
-      done: false,
+      status: "todo",
       createdAt: new Date().toISOString(),
     };
 
