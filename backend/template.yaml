@@ -1,7 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
+
 Description: >
-  Task Manager 3-tier app - backend (Lambda + API Gateway + DynamoDB)
+  Task Manager 3-tier app - backend
+  Lambda + API Gateway + DynamoDB + Cognito
 
 Globals:
   Function:
@@ -15,9 +17,6 @@ Globals:
 Resources:
 
   # ---------- DynamoDB ----------
-  # Single-table design. Partition key: taskId (a UUID we generate per task).
-  # We don't need a sort key since each item IS a task (no hierarchical data).
-  # On-demand billing so we stay in the free tier regardless of traffic pattern.
   TasksTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -25,7 +24,6 @@ Resources:
       PrimaryKey:
         Name: taskId
         Type: String
-      
 
   # ---------- API Gateway ----------
   TasksApi:
@@ -34,14 +32,14 @@ Resources:
       StageName: prod
       Cors:
         AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-        AllowHeaders: "'Content-Type'"
+        AllowHeaders: "'Content-Type,Authorization'"
         AllowOrigin: "'*'"
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: arn:aws:cognito-idp:ap-south-1:637423614462:userpool/ap-south-1_o9MAKdRsu
 
-  # ---------- Lambda functions ----------
-  # Each function gets exactly the IAM permissions it needs (least privilege),
-  # granted via SAM's Policies shorthand (DynamoDBCrudPolicy) rather than a
-  # broad admin role. This is what lets Lambda actually talk to DynamoDB.
-
+  # ---------- Task Lambdas ----------
   CreateTaskFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -106,9 +104,40 @@ Resources:
             Path: /tasks/{taskId}
             Method: DELETE
 
+  # ---------- Team Management ----------
+  CreateTeamMemberFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: createTeamMember.handler
+      CodeUri: src/
+      Environment:
+        Variables:
+          USER_POOL_ID: ap-south-1_o9MAKdRsu
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - cognito-idp:AdminCreateUser
+                - cognito-idp:AdminSetUserPassword
+              Resource: arn:aws:cognito-idp:ap-south-1:637423614462:userpool/ap-south-1_o9MAKdRsu
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref TasksApi
+            Path: /team-members
+            Method: POST
+            Auth:
+              Authorizer: CognitoAuthorizer
+
 Outputs:
   ApiUrl:
     Description: "Base URL for the Task Manager API"
     Value: !Sub "https://${TasksApi}.execute-api.${AWS::Region}.amazonaws.com/prod/tasks"
+
+  TeamMembersApiUrl:
+    Description: "Team management endpoint"
+    Value: !Sub "https://${TasksApi}.execute-api.${AWS::Region}.amazonaws.com/prod/team-members"
+
   TableName:
     Value: !Ref TasksTable
