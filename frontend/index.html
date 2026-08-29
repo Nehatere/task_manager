@@ -16,19 +16,23 @@
         <span class="summary-label">Total</span>
       </div>
 
-      <div class="summary-item done">
-        <span class="summary-count" id="done-count">0</span>
-        <span class="summary-label">Done</span>
+      <div class="summary-item todo">
+        <span class="summary-count" id="todo-count">0</span>
+        <span class="summary-label">To Do</span>
       </div>
 
-      <div class="summary-item pending">
-        <span class="summary-count" id="pending-count">0</span>
-        <span class="summary-label">Pending</span>
+      <div class="summary-item progress">
+        <span class="summary-count" id="progress-count">0</span>
+        <span class="summary-label">In Progress</span>
+      </div>
+
+      <div class="summary-item completed">
+        <span class="summary-count" id="completed-count">0</span>
+        <span class="summary-label">Completed</span>
       </div>
     </section>
 
     <form id="task-form" class="task-form">
-
       <input
         type="text"
         id="title"
@@ -54,17 +58,14 @@
       />
 
       <button type="submit">Add Task</button>
-
     </form>
 
     <p id="error-message" class="error-message"></p>
 
     <ul id="task-list" class="task-list"></ul>
-
   </main>
 
   <script src="config.js"></script>
   <script src="app.js"></script>
-
 </body>
 </html>
