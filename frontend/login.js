@@ -62,12 +62,12 @@ loginForm.addEventListener("submit", async event => {
     );
 
     if (data.user.role === "admin") {
-      window.location.href = "index.html";
+      window.location.href = "/";
       return;
     }
 
     if (data.user.role === "employee") {
-      window.location.href = "employee.html";
+      window.location.href = "/employee/";
       return;
     }
 
