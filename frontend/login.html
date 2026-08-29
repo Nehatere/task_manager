@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Task Manager</title>
+
+  <link rel="stylesheet" href="login.css">
+</head>
+
+<body>
+
+  <main class="login-wrapper">
+
+    <div class="login-card">
+
+      <div class="login-header">
+        <h1>Task Manager</h1>
+        <p>Sign in to your account</p>
+      </div>
+
+      <form id="login-form">
+
+        <label for="username">Username</label>
+
+        <input
+          type="text"
+          id="username"
+          placeholder="Enter username"
+          autocomplete="username"
+          required
+        >
+
+        <label for="password">Password</label>
+
+        <input
+          type="password"
+          id="password"
+          placeholder="Enter password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button type="submit" id="login-button">
+          Sign In
+        </button>
+
+      </form>
+
+      <p id="login-message" class="login-message"></p>
+
+    </div>
+
+  </main>
+
+  <script src="config.js"></script>
+  <script src="login.js"></script>
+
+</body>
+</html>
