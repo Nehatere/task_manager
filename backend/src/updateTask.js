@@ -12,7 +12,7 @@ exports.handler = async (event) => {
     }
 
     const body = JSON.parse(event.body || "{}");
-    const { title, description, priority, assignedTo, done } = body;
+    const { title, description, priority, assignedTo, status } = body;
 
     const updates = [];
     const names = {};
@@ -39,9 +39,16 @@ exports.handler = async (event) => {
       values[":assignedTo"] = assignedTo;
     }
 
-    if (done !== undefined) {
-      updates.push("done = :done");
-      values[":done"] = Boolean(done);
+    if (status !== undefined) {
+      const validStatuses = ["todo", "in-progress", "completed"];
+
+      if (!validStatuses.includes(status)) {
+        return response(400, { error: "Invalid status" });
+      }
+
+      updates.push("#status = :status");
+      names["#status"] = "status";
+      values[":status"] = status;
     }
 
     if (updates.length === 0) {
