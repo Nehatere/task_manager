@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Task Manager</h1>
+
+    <section class="summary" id="summary">
+      <div class="summary-item">
+        <span class="summary-count" id="total-count">0</span>
+        <span class="summary-label">Total</span>
+      </div>
+      <div class="summary-item done">
+        <span class="summary-count" id="done-count">0</span>
+        <span class="summary-label">Done</span>
+      </div>
+      <div class="summary-item pending">
+        <span class="summary-count" id="pending-count">0</span>
+        <span class="summary-label">Pending</span>
+      </div>
+    </section>
+
+    <form id="task-form" class="task-form">
+      <input type="text" id="title" placeholder="Task title" required />
+      <textarea id="description" placeholder="Description (optional)"></textarea>
+      <select id="priority">
+        <option value="low">Low priority</option>
+        <option value="medium" selected>Medium priority</option>
+        <option value="high">High priority</option>
+      </select>
+      <button type="submit">Add Task</button>
+    </form>
+
+    <p id="error-message" class="error-message"></p>
+
+    <ul id="task-list" class="task-list"></ul>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
