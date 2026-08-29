@@ -15,18 +15,26 @@ async function fetchTasks() {
     if (!res.ok) throw new Error("Failed to fetch tasks");
 
     const data = await res.json();
-    renderTasks(data.tasks || []);
-    renderSummary(data.summary || { total: 0, done: 0, pending: 0 });
+    const tasks = data.tasks || [];
+
+    renderTasks(tasks);
+    renderSummary(tasks);
   } catch (err) {
     console.error(err);
     showError("Could not load tasks.");
   }
 }
 
-function renderSummary(summary) {
-  document.getElementById("total-count").textContent = summary.total ?? 0;
-  document.getElementById("done-count").textContent = summary.done ?? 0;
-  document.getElementById("pending-count").textContent = summary.pending ?? 0;
+function renderSummary(tasks) {
+  const total = tasks.length;
+  const todo = tasks.filter(task => (task.status || "todo") === "todo").length;
+  const progress = tasks.filter(task => task.status === "in-progress").length;
+  const completed = tasks.filter(task => task.status === "completed").length;
+
+  document.getElementById("total-count").textContent = total;
+  document.getElementById("todo-count").textContent = todo;
+  document.getElementById("progress-count").textContent = progress;
+  document.getElementById("completed-count").textContent = completed;
 }
 
 function renderTasks(tasks) {
@@ -42,14 +50,19 @@ function renderTasks(tasks) {
   }
 
   for (const task of tasks) {
+    const status = task.status || "todo";
     const li = document.createElement("li");
-    li.className = "task-item" + (task.done ? " done" : "");
+
+    li.className = `task-item status-${status}`;
     li.dataset.id = task.taskId;
 
     li.innerHTML = `
       <div class="task-main">
         <div class="task-display">
-          <div class="task-title">${escapeHtml(task.title)}</div>
+
+          <div class="task-title">
+            ${escapeHtml(task.title)}
+          </div>
 
           ${
             task.description
@@ -63,12 +76,19 @@ function renderTasks(tasks) {
               : ""
           }
 
-          <span class="priority-badge priority-${task.priority}">
-            ${escapeHtml(task.priority)}
-          </span>
+          <div class="task-meta">
+            <span class="priority-badge priority-${task.priority}">
+              ${escapeHtml(task.priority)}
+            </span>
+
+            <span class="status-badge status-badge-${status}">
+              ${formatStatus(status)}
+            </span>
+          </div>
         </div>
 
         <div class="task-edit-form" style="display:none;">
+
           <input
             type="text"
             class="edit-title"
@@ -93,17 +113,26 @@ function renderTasks(tasks) {
             <option value="medium" ${task.priority === "medium" ? "selected" : ""}>Medium</option>
             <option value="high" ${task.priority === "high" ? "selected" : ""}>High</option>
           </select>
+
+          <select class="edit-status">
+            <option value="todo" ${status === "todo" ? "selected" : ""}>To Do</option>
+            <option value="in-progress" ${status === "in-progress" ? "selected" : ""}>In Progress</option>
+            <option value="completed" ${status === "completed" ? "selected" : ""}>Completed</option>
+          </select>
+
         </div>
       </div>
 
       <div class="task-actions">
-        <button
-          class="btn-done"
-          data-action="toggle"
-          data-id="${task.taskId}"
-          data-done="${task.done}">
-          ${task.done ? "Undo" : "Done"}
-        </button>
+
+        <select
+          class="status-select"
+          data-action="status"
+          data-id="${task.taskId}">
+          <option value="todo" ${status === "todo" ? "selected" : ""}>To Do</option>
+          <option value="in-progress" ${status === "in-progress" ? "selected" : ""}>In Progress</option>
+          <option value="completed" ${status === "completed" ? "selected" : ""}>Completed</option>
+        </select>
 
         <button
           class="btn-edit"
@@ -134,11 +163,18 @@ function renderTasks(tasks) {
           data-id="${task.taskId}">
           Delete
         </button>
+
       </div>
     `;
 
     taskList.appendChild(li);
   }
+}
+
+function formatStatus(status) {
+  if (status === "in-progress") return "In Progress";
+  if (status === "completed") return "Completed";
+  return "To Do";
 }
 
 function escapeHtml(str) {
@@ -188,6 +224,7 @@ form.addEventListener("submit", async (e) => {
 
     form.reset();
     document.getElementById("priority").value = "medium";
+
     await fetchTasks();
   } catch (err) {
     console.error(err);
@@ -195,7 +232,37 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-/* task action  */
+/* task status change */
+
+taskList.addEventListener("change", async (e) => {
+  const select = e.target.closest(".status-select");
+  if (!select) return;
+
+  const id = select.dataset.id;
+  const status = select.value;
+
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        status,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to update status");
+
+    await fetchTasks();
+  } catch (err) {
+    console.error(err);
+    showError("Could not update task status.");
+    await fetchTasks();
+  }
+});
+
+/* task actions */
 
 taskList.addEventListener("click", async (e) => {
   const btn = e.target.closest("button");
@@ -210,38 +277,21 @@ taskList.addEventListener("click", async (e) => {
   const editButton = taskItem.querySelector(".btn-edit");
   const saveButton = taskItem.querySelector(".btn-save");
   const cancelButton = taskItem.querySelector(".btn-cancel");
+  const statusSelect = taskItem.querySelector(".status-select");
 
   try {
-    /*done and undo function */
+    /* edit function */
 
-    if (action === "toggle") {
-      const currentlyDone = btn.dataset.done === "true";
-
-      const res = await fetch(`${API_URL}/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          done: !currentlyDone,
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to update task");
-      await fetchTasks();
-    }
-
-    /*edit function */
-
-    else if (action === "edit") {
+    if (action === "edit") {
       displaySection.style.display = "none";
       editForm.style.display = "flex";
       editButton.style.display = "none";
       saveButton.style.display = "inline-block";
       cancelButton.style.display = "inline-block";
+      statusSelect.style.display = "none";
     }
 
-    /*cancel section */
+    /* cancel section */
 
     else if (action === "cancel") {
       displaySection.style.display = "";
@@ -249,6 +299,7 @@ taskList.addEventListener("click", async (e) => {
       editButton.style.display = "inline-block";
       saveButton.style.display = "none";
       cancelButton.style.display = "none";
+      statusSelect.style.display = "inline-block";
     }
 
     /* save section */
@@ -258,6 +309,7 @@ taskList.addEventListener("click", async (e) => {
       const newDescription = taskItem.querySelector(".edit-description").value.trim();
       const newAssignedTo = taskItem.querySelector(".edit-assigned").value.trim();
       const newPriority = taskItem.querySelector(".edit-priority").value;
+      const newStatus = taskItem.querySelector(".edit-status").value;
 
       if (!newTitle) {
         showError("Task title cannot be empty.");
@@ -274,14 +326,17 @@ taskList.addEventListener("click", async (e) => {
           description: newDescription,
           priority: newPriority,
           assignedTo: newAssignedTo,
+          status: newStatus,
         }),
       });
 
       if (!res.ok) throw new Error("Failed to edit task");
+
       await fetchTasks();
     }
 
-    /*delete section */
+    /* delete section */
+
     else if (action === "delete") {
       const confirmed = confirm("Are you sure you want to delete this task?");
       if (!confirmed) return;
@@ -291,6 +346,7 @@ taskList.addEventListener("click", async (e) => {
       });
 
       if (!res.ok) throw new Error("Failed to delete task");
+
       await fetchTasks();
     }
   } catch (err) {
