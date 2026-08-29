@@ -1,122 +1,83 @@
-const {
-  CognitoIdentityProviderClient,
-  AdminCreateUserCommand,
-  AdminSetUserPasswordCommand
-} = require("@aws-sdk/client-cognito-identity-provider");
+const { GetCommand, PutCommand } = require("@aws-sdk/lib-dynamodb");
+const { docClient, response } = require("./dynamoClient");
+const { hashPassword } = require("./password");
+const { authenticate } = require("./auth");
 
-const { response } = require("./dynamoClient");
-
-const client = new CognitoIdentityProviderClient({
-  region: process.env.AWS_REGION
-});
-
-const USER_POOL_ID = process.env.USER_POOL_ID;
+const USERS_TABLE_NAME = process.env.USERS_TABLE_NAME;
 
 exports.handler = async event => {
   try {
-    const claims =
-      event.requestContext &&
-      event.requestContext.authorizer &&
-      event.requestContext.authorizer.claims;
+    const admin = await authenticate(event);
 
-    const groups = claims && claims["cognito:groups"]
-      ? claims["cognito:groups"].split(",")
-      : [];
-
-    if (!groups.includes("Admins")) {
-      return response(403, {
-        error: "Admin access required"
+    if (!admin || admin.role !== "admin") {
+      return response(401, {
+        error: "Admin login required"
       });
     }
 
     const body = JSON.parse(event.body || "{}");
 
     const name = String(body.name || "").trim();
-    const username = String(body.username || "").trim();
+    const username = String(body.username || "").trim().toLowerCase();
     const email = String(body.email || "").trim();
     const password = String(body.password || "");
 
-    if (!name || !username || !email || !password) {
+    if (!name || !username || !password) {
       return response(400, {
-        error: "Name, username, email and password are required"
-      });
-    }
-
-    if (username.length < 3) {
-      return response(400, {
-        error: "Username must be at least 3 characters"
+        error: "Name, username and password are required"
       });
     }
 
     if (password.length < 8) {
       return response(400, {
-        error: "Password must be at least 8 characters"
+        error: "Password must contain at least 8 characters"
       });
     }
 
-    await client.send(
-      new AdminCreateUserCommand({
-        UserPoolId: USER_POOL_ID,
-        Username: username,
-        MessageAction: "SUPPRESS",
-        UserAttributes: [
-          {
-            Name: "email",
-            Value: email
-          },
-          {
-            Name: "email_verified",
-            Value: "true"
-          },
-          {
-            Name: "name",
-            Value: name
-          }
-        ]
+    const existing = await docClient.send(
+      new GetCommand({
+        TableName: USERS_TABLE_NAME,
+        Key: { username }
       })
     );
 
-    await client.send(
-      new AdminSetUserPasswordCommand({
-        UserPoolId: USER_POOL_ID,
-        Username: username,
-        Password: password,
-        Permanent: true
-      })
-    );
-
-    return response(201, {
-      message: "Team member created successfully",
-      member: {
-        name,
-        username,
-        email
-      }
-    });
-
-  } catch (err) {
-    console.error("createTeamMember error:", err);
-
-    if (err.name === "UsernameExistsException") {
+    if (existing.Item) {
       return response(409, {
         error: "Username already exists"
       });
     }
 
-    if (err.name === "InvalidPasswordException") {
-      return response(400, {
-        error: "Password does not meet Cognito password requirements"
-      });
-    }
+    const passwordData = hashPassword(password);
 
-    if (err.name === "InvalidParameterException") {
-      return response(400, {
-        error: err.message
-      });
-    }
+    await docClient.send(
+      new PutCommand({
+        TableName: USERS_TABLE_NAME,
+        Item: {
+          username,
+          name,
+          email,
+          role: "employee",
+          passwordHash: passwordData.hash,
+          passwordSalt: passwordData.salt,
+          createdAt: new Date().toISOString()
+        }
+      })
+    );
+
+    return response(201, {
+      message: "Employee created successfully",
+      member: {
+        username,
+        name,
+        email
+      }
+    });
+
+  } catch (err) {
+    console.error("createTeamMember:", err);
 
     return response(500, {
-      error: "Could not create team member"
+      error: "Could not create employee"
     });
   }
 };
